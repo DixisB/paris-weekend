@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paris Weekend</title>
+<style>
+  :root {
+    --noir: #0f0f0f;
+    --blanc: #f5f2ed;
+    --or: #e8b84b;
+    --bleu: #2d6a9f;
+    --vert: #2d7d5f;
+    --rouge: #c0392b;
+    --violet: #7d3c98;
+    --gris: #777;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--noir); color: var(--blanc);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 14px; line-height: 1.5;
+    padding: 12px; max-width: 640px; margin: 0 auto;
+  }
+
+  /* HEADER */
+  .header { text-align: center; padding: 20px 0 16px; border-bottom: 1px solid #222; margin-bottom: 16px; }
+  .header h1 { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px; }
+  .header h1 span { color: var(--or); }
+  .header .sub { font-size: 11px; color: var(--gris); margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+  .tab {
+    flex: 1; padding: 9px; border-radius: 8px; border: 1px solid #333;
+    background: #111; color: #666; font-size: 12px; font-weight: 700;
+    text-align: center; cursor: pointer; transition: all 0.15s;
+    text-transform: uppercase; letter-spacing: 0.8px;
+  }
+  .tab.active.v { background: #0d1a2a; color: #6aaed6; border-color: var(--bleu); }
+  .tab.active.s { background: #1a1208; color: #e8c06a; border-color: #7a5a10; }
+  .tab.active.r { background: #0d180d; color: #6ac48a; border-color: var(--vert); }
+  .day-panel { display: none; }
+  .day-panel.active { display: block; }
+
+  /* ÉTAPES */
+  .step { display: flex; gap: 10px; margin-bottom: 2px; }
+  .step-left { display: flex; flex-direction: column; align-items: center; width: 38px; flex-shrink: 0; }
+  .step-time { font-size: 10px; font-weight: 700; color: var(--gris); white-space: nowrap; margin-bottom: 3px; font-variant-numeric: tabular-nums; }
+  .step-dot { width: 9px; height: 9px; border-radius: 50%; border: 2px solid #444; background: var(--noir); flex-shrink: 0; }
+  .step-line { width: 2px; flex: 1; min-height: 18px; margin-top: 3px; background: #222; }
+
+  .step.bl .step-dot { border-color: var(--bleu); }  .step.bl .step-line { background: #1a3555; }
+  .step.or .step-dot { border-color: var(--or); }    .step.or .step-line { background: #3a2a05; }
+  .step.gr .step-dot { border-color: var(--vert); }  .step.gr .step-line { background: #0d2a1a; }
+  .step.vl .step-dot { border-color: var(--violet); }.step.vl .step-line { background: #28103a; }
+  .step.pk .step-dot { border-color: #d44; }         .step.pk .step-line { background: #2a0d0d; }
+  .step.gd .step-dot { border-color: var(--or); background: var(--or); box-shadow: 0 0 8px var(--or); }
+                                                      .step.gd .step-line { background: #3a2a05; }
+
+  .card {
+    flex: 1; background: #141414; border: 1px solid #252525;
+    border-radius: 9px; padding: 10px 12px; margin-bottom: 5px;
+  }
+  .card.bl { border-color: #1a3555; } .card.or { border-color: #3a2a05; }
+  .card.gr { border-color: #0d2a1a; } .card.vl { border-color: #28103a; }
+  .card.pk { border-color: #2a1010; } .card.gd { border-color: #5a4000; background: #120f00; box-shadow: 0 0 14px rgba(232,184,75,0.1); }
+
+  .card-top { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
+  .card-name { font-size: 13px; font-weight: 700; color: var(--blanc); }
+  .b { font-size: 10px; padding: 1px 6px; border-radius: 3px; font-weight: 700; white-space: nowrap; }
+  .b-r { background: var(--rouge); color: #fff; }
+  .b-f { background: var(--vert); color: #fff; }
+  .b-w { background: #555; color: #fff; }
+
+  .transit { font-size: 11px; color: #4a7aa0; margin-bottom: 4px; font-style: italic; }
+  .todo { font-size: 12px; color: #bbb; line-height: 1.5; }
+  .todo strong { color: #e0e0e0; }
+  .todo ul { margin: 3px 0 0 14px; }
+  .todo li { margin-bottom: 1px; }
+
+  .arrow { text-align: center; font-size: 10px; color: #333; padding: 0 0 3px; }
+
+  /* ===== GUIDE RER ===== */
+  .rer-guide { margin-top: 4px; }
+  .rer-section { margin-bottom: 14px; }
+  .rer-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; border-radius: 8px 8px 0 0; cursor: pointer;
+    border: 1px solid #2a2a2a; border-bottom: none;
+    background: #181818; user-select: none;
+  }
+  .rer-header:hover { background: #1e1e1e; }
+  .rer-badge {
+    width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 13px; flex-shrink: 0; color: #fff;
+  }
+  .rer-B .rer-badge { background: #5599cc; }
+  .rer-C .rer-badge { background: #ddaa00; color: #111; }
+  .rer-A .rer-badge { background: #cc2222; }
+  .rer-header-text { flex: 1; font-size: 12px; font-weight: 700; color: var(--blanc); }
+  .rer-header-sub { font-size: 11px; color: var(--gris); font-weight: 400; }
+  .rer-chevron { color: #555; font-size: 12px; transition: transform 0.2s; }
+  .rer-section.open .rer-chevron { transform: rotate(180deg); }
+
+  .rer-body {
+    border: 1px solid #2a2a2a; border-top: none;
+    border-radius: 0 0 8px 8px; overflow: hidden;
+    display: none;
+  }
+  .rer-section.open .rer-body { display: block; }
+
+  .rer-trajet {
+    padding: 9px 12px; border-bottom: 1px solid #1e1e1e;
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .rer-trajet:last-child { border-bottom: none; }
+  .rer-from-to { flex: 1; }
+  .rer-route { font-size: 12px; font-weight: 600; color: var(--blanc); }
+  .rer-route .arr { color: var(--gris); font-weight: 400; }
+  .rer-details { font-size: 11px; color: #888; margin-top: 2px; line-height: 1.5; }
+  .rer-details strong { color: #aaa; }
+  .rer-time {
+    font-size: 12px; font-weight: 700; color: var(--or);
+    white-space: nowrap; padding-top: 1px; min-width: 36px; text-align: right;
+  }
+
+  .rer-tip {
+    background: #1a1208; border: 1px solid #3a2a05;
+    border-radius: 8px; padding: 9px 12px; margin-top: 10px;
+    font-size: 12px; color: #c8a040; line-height: 1.6;
+  }
+  .rer-tip strong { color: #e8c06a; }
+
+  /* ALERTE */
+  .alert { background: #170d0d; border: 1px solid #5a1a1a; border-radius: 8px; padding: 9px 12px; margin-bottom: 14px; font-size: 12px; color: #c88; }
+  .alert strong { color: #f99; }
+
+  /* FOOTER */
+  .footer { text-align: center; font-size: 11px; color: #444; margin-top: 24px; padding-top: 14px; border-top: 1px solid #1a1a1a; }
+  .footer strong { color: #666; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>PARIS <span>WEEKEND</span> 🗼</h1>
+  <div class="sub">12–13 Juin 2026 · Base : Le Bourget</div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active v" onclick="show('v')">Vendredi</div>
+  <div class="tab s" onclick="show('s')">Samedi</div>
+  <div class="tab r" onclick="show('r')">Guide RER</div>
+</div>
+
+<!-- ==================== VENDREDI ==================== -->
+<div class="day-panel active" id="p-v">
+
+  <div class="alert"><strong>⚠️ Tour Montparnasse fermée</strong> — Remplacée par la terrasse des Galeries Lafayette Champs-Élysées (gratuite, samedi).</div>
+
+  <div class="step bl">
+    <div class="step-left"><div class="step-time">9h30</div><div class="step-dot"></div><div class="step-line"></div></div>
+    <div class="card bl">
+      <div class="card-top"><span class="card-name">⛪ Sacré-Cœur & Montmartre</span><span class="b b-f">GRATUIT</span></div>
+      <div class="transit">RER B → Châtelet · M4 Barbès-Rochechouart · Funiculaire</div>
+      <div class="todo"><ul>
+        <li>Monter par le funiculaire (ticket RATP)</li>
+        <li>Vue panoramique sur Paris depuis les escaliers</li>
+        <li>Flâner Rue Lepic : marché, fromagers, boulangeries</li>
+      </ul></div>
+    </div>
+  </div>
+  <div class="arrow">↓ 15 min à pied</div>
+
+  <div class="step or">
+    <div class="step-left"><div class="step-time">10h45</div><div class="step-dot"></div><div class="step-line"></div></div>
+    <div class="card or">
+      <div class="card-top"><span class="card-name">☕ Café des Deux Moulins</span></div>
+      <div class="transit">15 Rue Lepic 75018</div>
+      <div class="todo">Brunch bistrot parisien · ~10-15€/pers · café du film Amélie Poulain</div>
+    </div>
+  </div>
+  <div class="arrow">↓ M4 → Étienne Marcel (~15 min)</div>
+
+  <div class="step vl">
+    <div class="step-left"><div class="step-time">12h30</div><div class="step-dot"></div><div class="step-line"></div></div>
+    <div class="card vl">
+      <div class="card-top"><span class="card-name">🪞 Musée de l'Illusion</span><span class="b b-r">RÉSERVER</span></div>
+      <div class="transit">98 Rue Saint-Denis 75001 · museedelillusion.fr</div>
+      <div class="todo"><ul>
+        <li>Tunnel vertigineux, illusions optiques, kaleidoscope humain</li>
+        <li>Durée ~1h · Prévoir batterie pour les photos</li>
+      </ul></div>
+    </div>
+  </div>
+  <div class="arrow">↓ 10 min à pied</div>
+
+  <div class="step vl">
+    <div class="step-left"><div class="step-time">14h00</div><div class="step-dot"></div><div class="step-line"></div></div>
+    <div class="card vl">
+      <div class="card-top"><span class="card-name">🎨 59 Rivoli</span><span class="b b-f">GRATUIT</span></div>
+      <div class="transit">59 Rue de Rivoli 75001 · ouvre à 13h</div>
+      <div class="todo"><ul>
+        <li>5 étages d'ateliers d'artistes ouverts au public</li>
+        <li>Voir les artistes travailler, leur parler, acheter une œuvre</li>
+        <li>Durée ~45 min</li>
+      </ul></div>
+    </div>
+  </div>
+  <div class="arrow">↓ 5 min à pied</div>
+
+  <div class="step gr">
+    <div class="step-left"><div class="step-time">15h00</div><div class="step-dot"></div><div class="step-line"></div></div>
+    <div class="card gr">
+      <div class="card-top"><span class="card-name">🌿 Jardin des Tuileries</span><span class="b b-f">GRATUIT</span></div>
+      <div class="transit">Entre 59 Rivoli et le Louvre · 75001 · ferme à 19h30</div>
+      <div class="todo"><ul>
+        <li>Chaises vertes au bord des bassins</li>
+        <li>Pause avant le Louvre · ~1h</li>
+      </ul></div>
+    </div>
+  </div>
+  <div class="arrow">↓ 5 min à pied · entrée Pyramide</div>
+
+  <div class="step bl">
+    <div class="step-left"><div class="step-time">16h30</div><div class="step-dot"></div><div class="step-line"></div></div>
+    <div class="card bl">
+      <div class="card-top"><span class="card-name">🏛️ Louvre</span><span class="b b-r">RÉSERVER</span></div>
+      <div class="transit">Place du Louvre 75001 · louvre.fr · ~20€/pers</div>
+      <div class="todo"><ul>
+        <li><strong>Vendredi = ouvert jusqu'à 21h45</strong> → moins de monde le soir</li>
+        <li>Incontournables : Mona Lisa, Vénus de Milo, Victoire de Samothrace</li>
+        <li>Prendre créneau 16h30 ou 17h en ligne</li>
+      </ul></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SAMEDI ==================== -->
+<div class="day-panel" id="p-s">
+
+  <div class="step bl">
+    <div class="step-left"><div class="step-time">9h30</div><div class="step-dot"></div><div class="step-line"></div></div>
+    <div class="card bl">
+      <div class="card-top"><span class="card-name">🦈 Aquarium de Paris</span><span class="b b-r">TICKET</span></div>
+      <div class="transit">RER B → Châtelet · M6 → Trocadéro · 5 Av. Albert de Mun 75016</div>
+      <div class="todo"><ul>
+        <li>Tunnel sous-marin, requins, médusarium lumineux</li>
+        <li>Durée ~1h30 · Ouvre à 9h30</li>
+      </ul></div>
+    </div>
+  </div>
+  <div class="arrow">↓ M6 Trocadéro → Charles de Gaulle Étoile (2 arrêts)</div>
+
+  <div class="step bl">
+    <div class="step-left"><div class="step-time">11h00</div><div class="step-dot"></div><div class="step-line"></div></div>
+    <div class="card bl">
+      <div class="card-top"><span class="card-name">🏛️ Arc de Triomphe</span><span class="b b-r">RÉSERVER</span></div>
+      <div class="transit">Pl. Charles de Gaulle 75008 · paris-arc-de-triomphe.fr · ~15€/pers</div>
+      <div class="todo"><ul>
+        <li>Vue du sommet : les 12 avenues + Champs-Élysées entiers</li>
+        <li>Flamme du Soldat Inconnu en bas (gratuit)</li>
+        <li>Durée ~1h</li>
+      </ul></div>
+    </div>
+  </div>
+  <div class="arrow">↓ 5 min à pied · Rue de Ponthieu</div>
+
+  <div class="step or">
+    <div class="step-left"><div class="step-time">12h15</div><div class="step-dot"></div><div class="step-line"></div></div>
+    <div class="card or">
+      <div class="card-top"><span class="card-name">🍳 Azur Café</span></div>
+      <div class="transit">63 Rue de Ponthieu 75008 · ⭐ 4.8 · ~15€/pers</div>
+      <div class="todo">Meilleur rapport Q/P du quartier · Durée ~1h</div>
+    </div>
+  </div>
+  <div class="arrow">↓ 7 min à pied vers l'Arc · descente des Champs à pied</div>
+
+  <div class="step bl">
+    <div class="step-left"><div class="step-time">13h30</div><div class="step-dot"></div><div class="step-line"></div></div>
+    <div class="card">
+      <div class="card-top"><span class="card-name">🌳 Champs-Élysées → Galeries Lafayette</span><span class="b b-f">GRATUIT</span></div>
+      <div class="transit">Arc → Concorde · 1,9 km à pied (~45 min) · Arrêt au n°60</div>
+      <div class="todo"><ul>
+        <li>Descendre l'avenue à pied, s'imprégner de l'ambiance</li>
+        <li>Au n°60 : monter à la <strong>terrasse panoramique 360°</strong> des Galeries Lafayette</li>
+        <li>Vue sur la Tour Eiffel, Notre-Dame, tous les toits · ~45 min</li>
+      </ul></div>
+    </div>
+  </div>
+  <div class="arrow">↓ M13 Concorde → Notre-Dame-des-Champs · M10 → Michel-Ange Molitor · Tram T2 → Albert-Kahn (~35 min)</div>
+
+  <div class="step gr">
+    <div class="step-left"><div class="step-time">15h30</div><div class="step-dot"></div><div class="step-line"></div></div>
+    <div class="card gr">
+      <div class="card-top"><span class="card-name">🎋 Jardin Japonais Albert-Kahn</span><span class="b b-r">RÉSERVER</span></div>
+      <div class="transit">2 Rue du Port, Boulogne-Billancourt · albert-kahn.hauts-de-seine.fr · ~5€/pers</div>
+      <div class="todo"><ul>
+        <li><strong>⚠️ Ferme à 18h PILE — arriver avant 17h30 impérativement</strong></li>
+        <li>Bambous, étang aux carpes koi, silence total</li>
+        <li>Durée ~1h30</li>
+      </ul></div>
+    </div>
+  </div>
+  <div class="arrow">↓ Tram T2 → RER C → Champ-de-Mars (~35 min)</div>
+
+  <div class="step or">
+    <div class="step-left"><div class="step-time">19h30</div><div class="step-dot"></div><div class="step-line"></div></div>
+    <div class="card or">
+      <div class="card-top"><span class="card-name">🍽️ Dîner — Rue Saint-Dominique</span></div>
+      <div class="transit">7e arr. · 10 min à pied du Champ-de-Mars</div>
+      <div class="todo">Bistrots et brasseries de quartier · Prix locaux · S'installer ensuite sur la pelouse</div>
+    </div>
+  </div>
+  <div class="arrow">↓ Champ-de-Mars face à la Tour</div>
+
+  <div class="step gd">
+    <div class="step-left"><div class="step-time">22h00</div><div class="step-dot"></div><div class="step-line"></div></div>
+    <div class="card gd">
+      <div class="card-top"><span class="card-name">✨ Tour Eiffel — Scintillements</span><span class="b b-f">GRATUIT</span></div>
+      <div class="transit">Champ-de-Mars 75007 · RER C arrêt Champ-de-Mars Tour Eiffel</div>
+      <div class="todo"><ul>
+        <li>S'installer sur la pelouse avec quelque chose à boire</li>
+        <li><strong>À 22h pile : scintillements dorés pendant 5 minutes</strong></li>
+        <li>Retour : RER C → Châtelet → RER B → Le Bourget (~40 min)</li>
+      </ul></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== GUIDE RER ==================== -->
+<div class="day-panel" id="p-r">
+<div class="rer-guide">
+
+  <div class="rer-tip" style="margin-bottom:14px">
+    <strong>🎫 Ticket Navigo Liberté+ ou carnet 10 tickets</strong><br>
+    Zones 1–5 couvrent tout le weekend (RER A/B/C + Métro + Tram).<br>
+    Acheter à la borne gare du Bourget ou sur l'appli <strong>RATP</strong> / <strong>Citymapper</strong>.
+  </div>
+
+  <!-- RER B -->
+  <div class="rer-section rer-B open">
+    <div class="rer-header" onclick="toggleRer(this)">
+      <div class="rer-badge">B</div>
+      <div class="rer-header-text">RER B — Votre ligne principale<br><span class="rer-header-sub">Le Bourget ↔ Paris Châtelet · jusqu'à ~00h30</span></div>
+      <div class="rer-chevron">▲</div>
+    </div>
+    <div class="rer-body">
+      <div class="rer-trajet">
+        <div class="rer-from-to">
+          <div class="rer-route">Le Bourget <span class="arr">→</span> Châtelet–Les Halles</div>
+          <div class="rer-details">Direction <strong>Paris CDG / Mitry-Claye</strong> · Toutes les 8-12 min<br>5 arrêts · Ne pas prendre direction Orly</div>
+        </div>
+        <div class="rer-time">~20 min</div>
+      </div>
+      <div class="rer-trajet">
+        <div class="rer-from-to">
+          <div class="rer-route">Châtelet–Les Halles <span class="arr">→</span> Le Bourget</div>
+          <div class="rer-details">Direction <strong>Mitry-Claye</strong> ou <strong>Aéroport CDG 2</strong> · Dernier ~00h30<br>Vérifier le terminus sur le panneau</div>
+        </div>
+        <div class="rer-time">~20 min</div>
+      </div>
+      <div class="rer-trajet">
+        <div class="rer-from-to">
+          <div class="rer-route">Châtelet <span class="arr">→</span> Denfert-Rochereau (Tuileries/Luxembourg)</div>
+          <div class="rer-details">Direction <strong>Robinson</strong> ou <strong>Saint-Rémy</strong> · 2 arrêts<br>Correspondance M13 ou M4 à Denfert</div>
+        </div>
+        <div class="rer-time">~10 min</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RER C -->
+  <div class="rer-section rer-C" style="margin-top:8px">
+    <div class="rer-header" onclick="toggleRer(this)">
+      <div class="rer-badge">C</div>
+      <div class="rer-header-text">RER C — Tour Eiffel<br><span class="rer-header-sub">Châtelet ↔ Champ-de-Mars Tour Eiffel · jusqu'à ~00h30</span></div>
+      <div class="rer-chevron">▼</div>
+    </div>
+    <div class="rer-body">
+      <div class="rer-trajet">
+        <div class="rer-from-to">
+          <div class="rer-route">Châtelet <span class="arr">→</span> Champ-de-Mars Tour Eiffel</div>
+          <div class="rer-details">Direction <strong>Versailles Château</strong> ou <strong>Pontoise</strong> · Toutes les 10-15 min<br>Arrêt direct · Sortie face au Champ-de-Mars</div>
+        </div>
+        <div class="rer-time">~10 min</div>
+      </div>
+      <div class="rer-trajet">
+        <div class="rer-from-to">
+          <div class="rer-route">Champ-de-Mars <span class="arr">→</span> Châtelet (retour soir)</div>
+          <div class="rer-details">Direction <strong>Aéroport CDG</strong> ou <strong>Mitry</strong> · Dernier ~00h25<br>Ensuite prendre RER B direction Mitry au Châtelet</div>
+        </div>
+        <div class="rer-time">~10 min</div>
+      </div>
+      <div class="rer-trajet">
+        <div class="rer-from-to">
+          <div class="rer-route">Jardin Japonais → RER C</div>
+          <div class="rer-details">Tram T2 Albert-Kahn → Javel <strong>puis</strong> RER C Javel → Champ-de-Mars<br>Ou : M10 → Javel directement</div>
+        </div>
+        <div class="rer-time">~35 min</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RER A -->
+  <div class="rer-section rer-A" style="margin-top:8px">
+    <div class="rer-header" onclick="toggleRer(this)">
+      <div class="rer-badge">A</div>
+      <div class="rer-header-text">RER A — Si besoin (Châtelet ↔ zone est/ouest)<br><span class="rer-header-sub">Non utilisé ce weekend sauf Auber / La Défense</span></div>
+      <div class="rer-chevron">▼</div>
+    </div>
+    <div class="rer-body">
+      <div class="rer-trajet">
+        <div class="rer-from-to">
+          <div class="rer-route">Châtelet <span class="arr">→</span> Nation / Vincennes</div>
+          <div class="rer-details">Direction <strong>Marne-la-Vallée</strong> · En cas d'imprévu est parisien</div>
+        </div>
+        <div class="rer-time">~8 min</div>
+      </div>
+      <div class="rer-trajet">
+        <div class="rer-from-to">
+          <div class="rer-route">Châtelet <span class="arr">→</span> La Défense</div>
+          <div class="rer-details">Direction <strong>Cergy</strong> ou <strong>Poissy</strong> · Non prévu mais utile à savoir</div>
+        </div>
+        <div class="rer-time">~15 min</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRAJETS CLÉS -->
+  <div class="rer-section" style="margin-top:8px">
+    <div class="rer-header" onclick="toggleRer(this)" style="border-radius:8px; border-bottom:1px solid #2a2a2a">
+      <div class="rer-badge" style="background:#444">🗺️</div>
+      <div class="rer-header-text">Trajets clés du weekend<br><span class="rer-header-sub">Résumé rapide porte-à-porte</span></div>
+      <div class="rer-chevron">▼</div>
+    </div>
+    <div class="rer-body">
+      <div class="rer-trajet">
+        <div class="rer-from-to">
+          <div class="rer-route">Le Bourget → Sacré-Cœur</div>
+          <div class="rer-details">RER B → Châtelet · M4 → Barbès-Rochechouart · Funiculaire</div>
+        </div>
+        <div class="rer-time">~35 min</div>
+      </div>
+      <div class="rer-trajet">
+        <div class="rer-from-to">
+          <div class="rer-route">Le Bourget → Aquarium / Trocadéro</div>
+          <div class="rer-details">RER B → Châtelet · M6 direction Nation → Trocadéro</div>
+        </div>
+        <div class="rer-time">~40 min</div>
+      </div>
+      <div class="rer-trajet">
+        <div class="rer-from-to">
+          <div class="rer-route">Le Bourget → Arc de Triomphe</div>
+          <div class="rer-details">RER B → Châtelet · M1 direction La Défense → Charles de Gaulle Étoile</div>
+        </div>
+        <div class="rer-time">~35 min</div>
+      </div>
+      <div class="rer-trajet">
+        <div class="rer-from-to">
+          <div class="rer-route">Le Bourget → Tour Eiffel (soir)</div>
+          <div class="rer-details">RER B → Châtelet · RER C → Champ-de-Mars Tour Eiffel</div>
+        </div>
+        <div class="rer-time">~30 min</div>
+      </div>
+      <div class="rer-trajet">
+        <div class="rer-from-to">
+          <div class="rer-route">Tour Eiffel → Le Bourget (retour nuit)</div>
+          <div class="rer-details">RER C → Châtelet · RER B direction Mitry-Claye → Le Bourget<br><strong>⚠️ Vérifier dernier RER B : ~00h30</strong></div>
+        </div>
+        <div class="rer-time">~40 min</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rer-tip" style="margin-top:14px">
+    <strong>⚠️ Pièges courants</strong><br>
+    · RER B : deux directions au Bourget — prendre <strong>Paris / Châtelet</strong>, pas CDG<br>
+    · RER C : plusieurs terminus — vérifier que l'arrêt <strong>Champ-de-Mars</strong> est marqué<br>
+    · Composez votre ticket <strong>avant</strong> de passer le portique, gardez-le jusqu'à la sortie<br>
+    · La nuit : les RER tournent mais moins souvent — vérifier heure sur Citymapper
+  </div>
+
+</div>
+</div><!-- /guide rer -->
+
+<div class="footer">
+  <strong>Base :</strong> 4 Rue de la République, Résidence Bluesky, Le Bourget 93350
+</div>
+
+<script>
+function show(id) {
+  document.querySelectorAll('.day-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('p-' + id).classList.add('active');
+  const map = {v:'v', s:'s', r:'r'};
+  document.querySelectorAll('.tab').forEach(t => { if(t.classList.contains(map[id])) t.classList.add('active'); });
+}
+function toggleRer(header) {
+  const section = header.parentElement;
+  const chevron = header.querySelector('.rer-chevron');
+  section.classList.toggle('open');
+  chevron.textContent = section.classList.contains('open') ? '▲' : '▼';
+}
+</script>
+</body>
+</html>
